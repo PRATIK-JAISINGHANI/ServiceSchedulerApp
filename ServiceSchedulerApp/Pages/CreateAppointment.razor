@@ -1,0 +1,121 @@
+﻿@page "/CreateAppointment"
+@using ServiceSchedulerApp.Models
+@using ServiceSchedulerApp.Data;
+@using ServiceSchedulerApp.Models;
+@using Microsoft.AspNetCore.Components.Authorization;
+@using System.Security.Claims;
+@inject AuthenticationStateProvider AuthenticationStateProvider;
+
+<h3>Create Appointment</h3>
+<br />
+@if (!string.IsNullOrEmpty(ErrorMessage))
+{
+    <div style="vertical-align:middle">
+        <p class="bg-danger" style="color: white; text-align: center; vertical-align: middle;">@ErrorMessage</p>
+    </div>
+}
+
+@if (showSuccess)
+{
+    <div style="vertical-align:middle">
+        <p class="bg-success" style="color: white; text-align: center; vertical-align: middle;">Appointment has been created.</p>
+    </div>
+}
+
+<div style="padding-top: 10px; padding-bottom:5px;">
+    <select class="w-50" style="height: 50px;" @onchange="OnValueChanged" title="Select Operator">
+        <option class="w-100" style="height: 50px;" value="Select" selected disabled="disabled">
+            (Choose Service Operator)
+        </option>
+        @foreach (var q in ServiceOperators)
+        {
+            <option class="w-100" style="height: 50px;" value="@q.Id">@q.Name</option>
+        }
+    </select>
+</div>
+<div style="padding-top: 5px; padding-bottom:5px;">
+    <input class="w-50" style="height:50px;" type="date" format-value="yyyy-MM-dd" @bind="appointmentDate" />
+</div>
+<div style="padding-top: 5px; padding-bottom:5px;">
+    <input class="w-50" style="height:50px;" type="time" @bind="appointmentTime" />
+</div>
+<div style="padding-top: 5px; padding-bottom:5px;">
+    <span>
+        <button class="w-50 btn btn-primary" @onclick="Book">Book</button>
+    </span>
+    @*<span>
+            <button class="w-25 btn btn-light" @onclick="Cancel">Cancel</button>
+        </span>*@
+</div>
+
+
+@code {
+
+    private bool showSuccess = false;
+    private string ErrorMessage;
+    private List<ServiceOperator> ServiceOperators;
+    private DateTime appointmentDate = new DateTime();
+    private DateTime appointmentTime = new DateTime();
+
+    private Guid selectedServiceOperator;
+
+    private ClaimsPrincipal User;
+
+    protected override async Task OnInitializedAsync()
+    {
+        appointmentDate = DateTime.Now;
+        appointmentTime = DateTime.Parse(DateTime.Now.ToString("yyyy-MM-dd HH:00:00"));
+        ServiceOperators = DataHelper.GetServiceOperators();
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        User = authState.User;
+    }
+
+    private void OnValueChanged(ChangeEventArgs e)
+    {
+        this.selectedServiceOperator = Guid.Parse(Convert.ToString(e.Value));
+        if (!string.IsNullOrEmpty(this.ErrorMessage))
+            this.ErrorMessage = string.Empty;
+    }
+
+    private void OnDateChange(ChangeEventArgs e)
+    {
+        this.appointmentDate = DateTime.Parse(Convert.ToString(e.Value));
+    }
+
+    private void OnTimeChange(ChangeEventArgs e)
+    {
+
+    }
+
+    private void Book()
+    {
+        if (this.selectedServiceOperator.Equals(Guid.Empty))
+        {
+            this.ErrorMessage = "Please select service provider.";
+            return;
+        }
+
+        var finalAppointment = DateTime.Parse(this.appointmentDate.ToString("yyyy-MM-dd") + " " + this.appointmentTime.ToString("HH:00:00"));
+        if (DataHelper.IsAppointmentAlreadyPresent(this.selectedServiceOperator, finalAppointment))
+        {
+            this.ErrorMessage = "Please select another time slot for an appointment, As selected time slot is already booked.";
+            return;
+        }
+
+        if (DataHelper.IsAppointmentPresentForCustomer(User.Identity.Name, finalAppointment))
+        {
+            this.ErrorMessage = "Appointment already present for selected date.";
+            return;
+        }
+
+        this.ErrorMessage = "";
+        this.showSuccess = DataHelper.CreateAppointment(this.selectedServiceOperator, finalAppointment, User.Identity.Name);
+
+    }
+
+    private void Cancel()
+    {
+
+    }
+
+}

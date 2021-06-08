@@ -1,5 +1,9 @@
-﻿<div class="top-row pl-4 navbar navbar-dark">
-    <a class="navbar-brand" href="">ServiceSchedulerApp</a>
+﻿@using Microsoft.AspNetCore.Components.Authorization;
+@using System.Security.Claims;
+@inject AuthenticationStateProvider AuthenticationStateProvider;
+
+<div class="top-row pl-4 navbar navbar-dark">
+    <a class="navbar-brand" href="">Service Scheduler App</a>
     <button class="navbar-toggler" @onclick="ToggleNavMenu">
         <span class="navbar-toggler-icon"></span>
     </button>
@@ -8,27 +12,53 @@
 <div class="@NavMenuCssClass" @onclick="ToggleNavMenu">
     <ul class="nav flex-column">
         <li class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="oi oi-home" aria-hidden="true"></span> Home
+            <NavLink class="nav-link" href="AllServiceOperators" Match="NavLinkMatch.All">
+                <span class="oi oi-home" aria-hidden="true"></span> Service Operators
             </NavLink>
         </li>
-        <li class="nav-item px-3">
-            <NavLink class="nav-link" href="counter">
-                <span class="oi oi-plus" aria-hidden="true"></span> Counter
-            </NavLink>
-        </li>
-        <li class="nav-item px-3">
-            <NavLink class="nav-link" href="fetchdata">
-                <span class="oi oi-list-rich" aria-hidden="true"></span> Fetch data
-            </NavLink>
-        </li>
+        @if (User.Identity.IsAuthenticated)
+        {
+            <li class="nav-item px-3">
+                <NavLink class="nav-link" href="MyScheduledAppointments" Match="NavLinkMatch.All">
+                    <span class="oi oi-book" aria-hidden="true"></span>My Appointments
+                </NavLink>
+            </li>
+            <li class="nav-item px-3">
+                <NavLink class="nav-link" href="CreateAppointment" Match="NavLinkMatch.All">
+                    <span class="oi oi-task" aria-hidden="true"></span> Create Appointment
+                </NavLink>
+            </li>
+}
+        @*<li class="nav-item px-3">
+                <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                    <span class="oi oi-home" aria-hidden="true"></span> Home
+                </NavLink>
+            </li>
+            <li class="nav-item px-3">
+                <NavLink class="nav-link" href="counter">
+                    <span class="oi oi-plus" aria-hidden="true"></span> Counter
+                </NavLink>
+            </li>
+            <li class="nav-item px-3">
+                <NavLink class="nav-link" href="fetchdata">
+                    <span class="oi oi-list-rich" aria-hidden="true"></span> Fetch data
+                </NavLink>
+            </li>*@
     </ul>
 </div>
 
 @code {
+    private ClaimsPrincipal User;
+
     private bool collapseNavMenu = true;
 
     private string NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        User = authState.User;
+    }
 
     private void ToggleNavMenu()
     {

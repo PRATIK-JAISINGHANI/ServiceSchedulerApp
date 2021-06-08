@@ -1,0 +1,46 @@
+﻿@page "/AllServiceOperators"
+@using ServiceSchedulerApp.Models
+@using ServiceSchedulerApp.Data;
+
+
+<h1>Registered Service Operators</h1>
+
+@if (ServiceOperators == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Address</th>
+                <th>City</th>
+                <th>Latitude</th>
+                <th>Longitude</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var serviceOperator in ServiceOperators)
+            {
+            <tr>
+                <td>@serviceOperator.Name</td>
+                <td>@serviceOperator.Address</td>
+                <td>@serviceOperator.City</td>
+                <td>@serviceOperator.GeoLatitude</td>
+                <td>@serviceOperator.GeoLongitude</td>
+            </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<ServiceOperator> ServiceOperators;
+
+    protected override async Task OnInitializedAsync()
+    {
+        ServiceOperators = DataHelper.GetServiceOperators();
+    }
+}

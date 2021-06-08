@@ -1,0 +1,55 @@
+﻿@page "/MyScheduledAppointments"
+@using ServiceSchedulerApp.Models
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Security.Claims;
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+
+<h1>My Scheduled Appointments</h1>
+
+@if (ScheduledAppointments == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Operator</th>
+                <th>Customer</th>
+                <th>Appointment Date Time</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var scheduledAppointment in ScheduledAppointments)
+            {
+                <tr>
+                    <td>@scheduledAppointment.ServiceOperatorName</td>
+                    <td>@User.Identity.Name</td>
+                    <td>@scheduledAppointment.AppointmentDateTime</td>
+                    <td>@scheduledAppointment.AppointmentStatus</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<ScheduledAppointments> ScheduledAppointments;
+    private ClaimsPrincipal User;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        ScheduledAppointments = DataHelper.GetMyAppointments(user.Identity.Name);
+        User = authState.User;
+    }
+
+    private void Cancel(MouseEventArgs e)
+    {
+
+    }
+}
